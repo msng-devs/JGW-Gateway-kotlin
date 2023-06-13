@@ -1,7 +1,14 @@
 package com.jaramgroupware.gateway.route
 
+import com.jaramgroupware.gateway.dto.apiRoute.ApiRouteResponseDto
+import com.jaramgroupware.gateway.route.filter.AuthenticationFilterFactory
+import com.jaramgroupware.gateway.route.filter.CleanRequestFilterFactory
+import com.jaramgroupware.gateway.route.filter.RBACFilterFactory
+import com.jaramgroupware.gateway.service.ApiRouteService
 import lombok.RequiredArgsConstructor
 import lombok.extern.slf4j.Slf4j
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.gateway.filter.factory.SetPathGatewayFilterFactory
 import org.springframework.cloud.gateway.route.Route
 import org.springframework.cloud.gateway.route.RouteLocator
@@ -11,129 +18,168 @@ import reactor.core.publisher.Flux
 import java.util.function.Function
 
 @Slf4j
-class RouteLocatorImpl : RouteLocator {
-    private val apiRouteService: ApiRouteService? = null
-    private val routeLocatorBuilder: RouteLocatorBuilder? = null
-    private val authorizationFilterFactory: AuthorizationFilterFactory? = null
-    private val authenticationFilterFactory: AuthenticationFilterFactory? = null
-    private val gatewayRefreshFactory: GatewayRefreshFactory? = null
-    private val cleanRequestFilterFactory: CleanRequestFilterFactory? = null
-    private val setPathGatewayFilterFactory: SetPathGatewayFilterFactory? = null
-    private val requestLoggingFilterFactory: RequestLoggingFilterFactory? = null
-    private val responseLoggingFilterFactory: ResponseLoggingFilterFactory? = null
+class RouteLocatorImpl(
+    @Autowired val apiRouteService: ApiRouteService,
+    @Autowired val routeLocatorBuilder: RouteLocatorBuilder,
+    @Autowired val setPathGatewayFilterFactory: SetPathGatewayFilterFactory,
+    @Autowired val cleanRequestFilterFactory: CleanRequestFilterFactory,
+    @Autowired val requestFilterFactory: CleanRequestFilterFactory,
+    @Autowired val authenticationFilterFactory: AuthenticationFilterFactory,
+    @Autowired val rbacFilterFactory: RBACFilterFactory
+) : RouteLocator {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     override fun getRoutes(): Flux<Route> {
-        val routesBuilder = routeLocatorBuilder!!.routes()
+        logger.info("start setup routes.")
+
+        val routesBuilder = routeLocatorBuilder.routes()
+
         return apiRouteService.findAllRoute()
             .map { route ->
-                routesBuilder.route(
-                    java.lang.String.valueOf(route.getId())
-                ) { predicateSpec: PredicateSpec ->
-                    setPredicateSpec(
-                        route,
-                        predicateSpec
-                    )
-                }
+                routesBuilder.route(route.id.toString())
+                { predicateSpec -> setPredicateSpec(route, predicateSpec) }
             }
             .collectList()
-            .flatMapMany { builders ->
-                routesBuilder.build()
-                    .routes
-            }
+            .flatMapMany { routesBuilder.build().routes }
     }
 
-    private fun setPredicateSpec(route: ApiRoute, predicateSpec: PredicateSpec): Buildable<Route?> {
-        log.info(
-            "SERVICE = {} [{}][{}] | {}",
-            route.getService().getName(),
-            route.getRouteOption().getName(),
-            route.getMethod().getName(),
-            route.getPath()
-        )
-        val booleanSpec: BooleanSpec = predicateSpec.path(route.getPath())
-        booleanSpec.filters(Function { f: GatewayFilterSpec ->
-            f.filters(requestLoggingFilterFactory.apply { config ->
-                config.setEnable(
-                    true
-                )
+    /**
+     * route에 옵션 및 path를 설정하는 함수.
+     *
+     * @param route
+     * @param predicateSpec
+     * @return
+     */
+    private fun setPredicateSpec(route: ApiRouteResponseDto, predicateSpec: PredicateSpec): Buildable<Route?> {
+
+        logger.info("SET {} | {} | {} : {}",route.serviceName,route.routeOptionName,route.methodName,route.path)
+
+        //set route path. ex) /api/v1/member/{id} ...
+        val booleanSpec = predicateSpec.path(route.path)
+
+        //set http method. ex) GET, POST, PUT, DELETE etc.
+        booleanSpec.and().method(route.methodName)
+
+
+        booleanSpec.filters {
+            //add clean filter.
+            //기본적으로 CORS 설정상 내부 로직에 필수적인 role_pk, 및 user_pk는 무시 되지만, 혹시 모를 버그를 방지 하기위해 삭제 처리
+            it.filters(cleanRequestFilterFactory.apply { config ->
+                config.isEnable = true
             })
-        })
-        booleanSpec.filters(Function { f: GatewayFilterSpec ->
-            f.filters(cleanRequestFilterFactory.apply { config ->
-                config.setIsEnable(
-                    true
-                )
+
+            //add loggin filter
+            it.filters(requestFilterFactory.apply { config ->
+                config.isEnable = true
             })
-        })
-        if (!StringUtils.isEmpty(route.getMethod().getName())) {
-            booleanSpec.and()
-                .method(route.getMethod().getName())
         }
-        when (route.getRouteOption().getName()) {
-            "AUTH" -> booleanSpec.filters(Function { f: GatewayFilterSpec ->
-                f.filters(authenticationFilterFactory.apply { config ->
-                    config.setOnlyToken(false)
-                    config.setOptional(false)
-                })
-            })
 
-            "ONLY_TOKEN_AUTH" -> booleanSpec.filters(Function { f: GatewayFilterSpec ->
-                f.filters(authenticationFilterFactory.apply { config ->
-                    config.setOnlyToken(true)
-                    config.setOptional(false)
-                })
-            })
+        //process route options.
+        when (route.routeOptionId) {
+            //NO_AUTH
+            1 -> {
+                //nothing
+            }
 
-            "RBAC" -> {
-                booleanSpec.filters(Function { f: GatewayFilterSpec ->
-                    f.filters(authenticationFilterFactory.apply { config ->
-                        config.setOnlyToken(false)
-                        config.setOptional(false)
-                    })
-                })
-                if (!StringUtils.isEmpty(route.getRole().getName())) {
-                    booleanSpec.filters(Function { f: GatewayFilterSpec ->
-                        f.filters(authorizationFilterFactory.apply { config ->
-                            config.setRole(
-                                route.getRole().getId()
-                            )
+            //AUTH
+            2 -> {
+                booleanSpec.filters {
+                    it.filters(
+                        authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
+                            config.isOnlyToken = false
+                            config.isOptional = false
                         })
-                    })
+
+                    it.filters(
+                        rbacFilterFactory.apply { config: RBACFilterFactory.Config ->
+                            config.role = route.roleId
+                        }
+                    )
                 }
+
             }
 
-            "AUTH_OPTIONAL" -> booleanSpec.filters(Function { f: GatewayFilterSpec ->
-                f.filters(authenticationFilterFactory.apply { config ->
-                    config.setOnlyToken(false)
-                    config.setOptional(true)
-                })
-            })
+            //ONLY_TOKEN_AUTH
+            3 -> {
 
-            "NO_AUTH" -> {}
-            else -> {}
+                booleanSpec.filters {
+                    it.filters(
+                        authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
+                            config.isOnlyToken = true
+                            config.isOptional = false
+                        })
+                }
+
+            }
+
+            //RBAC
+            4 -> {
+                booleanSpec.filters {
+                    it.filters(
+                        authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
+                            config.isOnlyToken = false
+                            config.isOptional = false
+                        })
+                }
+
+            }
+
+            //AUTH_OPTIONAL
+            5 -> {
+                booleanSpec.filters {
+                    it.filters(
+                        authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
+                            config.isOnlyToken = false
+                            config.isOptional = true
+                        })
+                }
+
+            }
         }
-        if (route.getPathVariable() != null) {
-            val routePaths: Array<String> = route.getPathVariable().split(";")
-            var routePathIndex = 0
-            val newUrl = StringBuilder()
-            for (path in route.getPath().split("/")) {
-                newUrl.append("/")
-                if (path.startsWith("{")) {
-                    newUrl.append(routePaths[routePathIndex])
-                    routePathIndex++
-                } else {
-                    newUrl.append(path)
-                }
-            }
-            newUrl.append("/**")
+
+        //set path params
+        if (route.pathVariable.isNotBlank()) {
+
+            val pathParamAppliedPath = createPathParamPath(pathParam = route.pathVariable, routePath = route.path)
             booleanSpec.filters { f: GatewayFilterSpec ->
                 f.filters(
-                    setPathGatewayFilterFactory!!.apply { config: SetPathGatewayFilterFactory.Config ->
-                        config.template = newUrl.toString()
+                    setPathGatewayFilterFactory.apply { config: SetPathGatewayFilterFactory.Config ->
+                        config.template = pathParamAppliedPath
                     })
             }
         }
         //set domain and return route
-        return booleanSpec.uri(route.getService().getDomain())
+        return booleanSpec.uri(route.serviceDomain)
     }
+
+    /**
+     * path param을 적용한 path를 생성하는 함수.
+     *
+     * @param pathParam 적용할 path params. ;로 구분되어야 합니다. ex) {id};{name}
+     * @param routePath 적용할 path. ex) /api/v1/member/{id}
+     * @return
+     */
+    private fun createPathParamPath(pathParam:String,routePath:String):String{
+        val pathParams = pathParam.split(";")
+
+        var pathParamIndex = 0
+
+        val newUrl = StringBuilder()
+
+        for (path in routePath.split("/")) {
+            newUrl.append("/")
+            if (path.startsWith("{")) {
+                newUrl.append(pathParams[pathParamIndex])
+                pathParamIndex++
+            } else {
+                newUrl.append(path)
+            }
+        }
+        newUrl.append("/**")
+
+        return newUrl.toString()
+    }
+
+
 }

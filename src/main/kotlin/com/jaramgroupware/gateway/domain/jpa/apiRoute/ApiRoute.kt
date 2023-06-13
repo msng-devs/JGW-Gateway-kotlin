@@ -21,7 +21,7 @@ data class ApiRoute(
     val path: String,
 
     @Column("PATH_VARIABLE")
-    val pathVariable: String,
+    val pathVariable: String?,
 
     @Transient
     val role: Role,

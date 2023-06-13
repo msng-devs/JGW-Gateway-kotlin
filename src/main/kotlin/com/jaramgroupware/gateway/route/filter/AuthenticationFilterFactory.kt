@@ -1,32 +1,38 @@
 package com.jaramgroupware.gateway.route.filter
 
+import com.jaramgroupware.gateway.dto.member.MemberResponseDto
 import com.jaramgroupware.gateway.security.firebase.FirebaseClient
+import com.jaramgroupware.gateway.service.MemberService
 import com.jaramgroupware.gateway.utlis.exception.authentication.AuthenticationErrorCode
 import com.jaramgroupware.gateway.utlis.exception.authentication.AuthenticationException
-import jakarta.validation.constraints.NotEmpty
+import com.jaramgroupware.gateway.utlis.logging.TemplateLogger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.gateway.filter.GatewayFilter
+import org.springframework.cloud.gateway.filter.GatewayFilterChain
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.stereotype.Component
+import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 import java.util.*
+import java.util.function.Function
 
 @Component
 class AuthenticationFilterFactory(
-    @Autowired val firebaseClient: FirebaseClient
+    @Autowired val firebaseClient: FirebaseClient,
+    @Autowired val memberService: MemberService,
 
 ) : GatewayFilterFactory<AuthenticationFilterFactory.Config>{
 
-    class Config {
-        @NotEmpty
-        val isOnlyToken = false
+    private val logger = LoggerFactory.getLogger(RequestLoggingFilterFactory::class.java)
 
-        @NotEmpty
-        val isOptional = false
-    }
+    data class Config(
+        var isOnlyToken: Boolean = false,
+        var isOptional: Boolean = false
+    )
 
     override fun newConfig(): Config {
         return newConfig();
@@ -38,23 +44,41 @@ class AuthenticationFilterFactory(
             val request = exchange.request
             val token = checkContainsAndExtractToken(request);
 
+            val uid = firebaseClient.verifyAndDecodeToken(token)
+
             when(config.isOnlyToken) {
                 true -> {
-                    processOnlyTokenValid(token);
+                    val newRequest = exchange.request
+                        .mutate()
+                        .header("user_pk", uid)
+                        .build()
+                    val requestLog = TemplateLogger.createRequestLog(request)
+                    logger.info("AuthenticationFilter Pass.(uid:$uid isOnlyToken - enable / isOptional - disable ) -$requestLog")
+                    return@GatewayFilter chain.filter(exchange.mutate().request(newRequest).build())
                 }
+
                 false -> {
-                    if (token.isNotEmpty()) {
-                        exchange.response.statusCode = HttpStatus.UNAUTHORIZED
-                        return@GatewayFilter exchange.response.setComplete()
+                    return@GatewayFilter memberService.findMemberById(uid).flatMap { it ->
+
+                        if (!config.isOptional) { checkUidAndRoleIsNotNull(it) }
+
+                        val newRequest = exchange.request
+                            .mutate()
+                            .header("user_pk", it.id?:"null")
+                            .header("role_pk", it.roleId.toString()?:"null")
+                            .build()
+
+                        val requestLog = TemplateLogger.createRequestLog(request)
+                        logger.info("AuthenticationFilter Pass.(uid:$uid isOnlyToken - disable / isOptional - {} ) -$requestLog", if(config.isOptional) "enable" else "disable")
+                        return@flatMap chain.filter(exchange.mutate().request(newRequest).build())
                     }
+
                 }
             }
-
-            chain.filter(exchange)
         }
     }
 
-    //토큰 존재 여부 검증 및 추출
+
     fun checkContainsAndExtractToken(request: ServerHttpRequest): String {
 
         val authorizationHeader = request.headers.getFirst(HttpHeaders.AUTHORIZATION);
@@ -66,8 +90,14 @@ class AuthenticationFilterFactory(
         throw AuthenticationException(message = "토큰을 헤더에서 찾을 수 없거나, 올바른 형식이 아닙니다.", errorCode = AuthenticationErrorCode.TOKEN_NOT_FOUND);
     }
 
-    //옵션이 only token 일 경우, 토큰 유효성만 검증함.
-    fun processOnlyTokenValid(token:String){
+
+    fun checkUidAndRoleIsNotNull(dto:MemberResponseDto){
+
+        if (dto.isNull()) {
+            throw AuthenticationException(
+            message = "토큰에 해당하는 유저가 없습니다.",
+            errorCode = AuthenticationErrorCode.USER_NOT_FOUND)
+        }
 
     }
 }
