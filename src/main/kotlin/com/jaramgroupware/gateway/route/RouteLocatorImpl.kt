@@ -87,15 +87,9 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
-                            config.isOnlyToken = false
-                            config.isOptional = false
+                            config.mode = AuthenticationFilterFactory.AuthFilterMode.FULLY
                         })
 
-                    it.filters(
-                        rbacFilterFactory.apply { config: RBACFilterFactory.Config ->
-                            config.role = route.roleId
-                        }
-                    )
                 }
 
             }
@@ -106,8 +100,7 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
-                            config.isOnlyToken = true
-                            config.isOptional = false
+                            config.mode = AuthenticationFilterFactory.AuthFilterMode.ONLY_TOKEN
                         })
                 }
 
@@ -118,10 +111,16 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
-                            config.isOnlyToken = false
-                            config.isOptional = false
+                            config.mode = AuthenticationFilterFactory.AuthFilterMode.FULLY
                         })
+
+                    it.filters(
+                        rbacFilterFactory.apply { config: RBACFilterFactory.Config ->
+                            config.role = route.roleId
+                        }
+                    )
                 }
+
 
             }
 
@@ -130,8 +129,7 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
-                            config.isOnlyToken = false
-                            config.isOptional = true
+                            config.mode = AuthenticationFilterFactory.AuthFilterMode.OPTIONAL
                         })
                 }
 

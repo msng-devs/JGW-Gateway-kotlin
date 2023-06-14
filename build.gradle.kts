@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "3.1.0"
+    id("org.springframework.boot") version "3.0.7"
     id("io.spring.dependency-management") version "1.1.0"
     kotlin("jvm") version "1.8.21"
     kotlin("plugin.spring") version "1.8.21"
@@ -41,9 +41,14 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
-
+    implementation("org.springframework.boot:spring-boot-starter-jersey")
     //firebase
-    implementation("com.google.firebase:firebase-admin:9.0.0")
+    // https://mvnrepository.com/artifact/com.google.firebase/firebase-admin
+    implementation("com.google.firebase:firebase-admin:9.1.1")
+
+    // https://mvnrepository.com/artifact/io.grpc/grpc-netty
+    implementation("io.grpc:grpc-netty:1.56.0")
+
 
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis-reactive
     implementation("org.springframework.boot:spring-boot-starter-data-redis")

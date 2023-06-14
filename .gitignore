@@ -46,3 +46,4 @@ firebase.json
 logback.xml
 logback-proudct.xml
 logback-dev.xml
+logback-product.xml

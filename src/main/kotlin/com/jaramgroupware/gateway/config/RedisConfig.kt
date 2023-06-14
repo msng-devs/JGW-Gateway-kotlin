@@ -38,7 +38,7 @@ class RedisConfig {
     @Bean
     fun redisTemplate(): RedisTemplate<*, *>? {
         val redisTemplate: RedisTemplate<*, *> = RedisTemplate<Any, Any>()
-        redisTemplate.connectionFactory = redisConnectionFactory()
+        redisTemplate.setConnectionFactory(redisConnectionFactory()!!)
         return redisTemplate
     }
 }
