@@ -1,6 +1,5 @@
 package com.jaramgroupware.gateway.service
 
-import com.jaramgroupware.gateway.domain.jpa.member.Member
 import com.jaramgroupware.gateway.domain.jpa.member.MemberRepository
 import com.jaramgroupware.gateway.dto.member.MemberResponseDto
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,10 +12,10 @@ class MemberService(
 ) {
     fun findMemberById(id: String): Mono<MemberResponseDto> {
         return memberRepository.findMemberById(id)
-            .flatMap{ member ->
-                if(member != null){
+            .flatMap { member ->
+                if (member != null) {
                     Mono.just(MemberResponseDto(member))
-                } else{
+                } else {
                     Mono.just(MemberResponseDto(null, null))
                 }
             }

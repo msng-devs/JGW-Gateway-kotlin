@@ -1,15 +1,18 @@
 package com.jaramgroupware.gateway.security.firebase
 
-import com.google.firebase.FirebaseException
 import com.google.firebase.auth.AuthErrorCode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.jaramgroupware.gateway.security.firebase.response.TokenResponse
 import com.jaramgroupware.gateway.utlis.exception.application.ApplicationErrorCode
 import com.jaramgroupware.gateway.utlis.exception.application.ApplicationException
 import com.jaramgroupware.gateway.utlis.exception.authentication.AuthenticationErrorCode
 import com.jaramgroupware.gateway.utlis.exception.authentication.AuthenticationException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 /**
  * Firebase Admin Sdk를 사용하여 토큰 검증 작업을 수행할 수 있는 클래스입니다.
@@ -20,7 +23,7 @@ import org.springframework.stereotype.Component
 class FirebaseClient(
     @Autowired
     val firebaseAuth: FirebaseAuth
-    ) {
+) {
     /**
      * firebase admin sdk를 사용해 토큰을 검증 및 decode를 수행하고, uid를 반환합니다.
      *
@@ -29,23 +32,41 @@ class FirebaseClient(
      * @throws ApplicationException firebase admin sdk에서 발생하는 예외를 처리합니다. 일반적으로 서버 내부 오류입니다.
      * @return
      */
-    fun verifyAndDecodeToken(token: String): String {
+    fun verifyAndDecodeToken(token: String, isCheckValid: Boolean): TokenResponse {
 
-        lateinit var uid:String;
+        lateinit var uid: String
+        lateinit var expDataTime: LocalDateTime
+
         try {
-            val decodedToken = firebaseAuth.verifyIdToken(token);
-            uid = decodedToken.uid;
-            assert (decodedToken.isEmailVerified);
-        } catch (e: FirebaseAuthException){
-            processingFireBaseAuthException(e.authErrorCode);
-        } catch (e: AssertionError){
-            throw AuthenticationException(
+
+            val decodedToken = firebaseAuth.verifyIdToken(token)
+            uid = decodedToken.uid
+            expDataTime =
+                Instant.ofEpochSecond(((decodedToken.claims["exp"] as? Long)!!)).atZone(ZoneId.systemDefault())
+                    .toLocalDateTime()
+            assert(decodedToken.isEmailVerified)
+
+        } catch (e: FirebaseAuthException) {
+            if (isCheckValid) processingFireBaseAuthException(e.authErrorCode)
+            return TokenResponse(
+                uid = null,
+                exp = null
+            )
+        } catch (e: AssertionError) {
+            if (isCheckValid) throw AuthenticationException(
                 message = "이메일 인증이 되지 않은 계정입니다. 이메일 인증을 완료해주세요.",
                 errorCode = AuthenticationErrorCode.INVALID_TOKEN
             )
+            return TokenResponse(
+                uid = null,
+                exp = null
+            )
         }
 
-        return uid;
+        return TokenResponse(
+            uid = uid,
+            exp = expDataTime
+        )
     }
 
     /**
@@ -75,4 +96,5 @@ class FirebaseClient(
             )
         }
     }
+
 }

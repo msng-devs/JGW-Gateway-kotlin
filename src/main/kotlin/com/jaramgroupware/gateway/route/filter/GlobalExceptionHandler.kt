@@ -1,14 +1,23 @@
 package com.jaramgroupware.gateway.route.filter
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.jaramgroupware.gateway.dto.error.ErrorResponseDto
+import com.jaramgroupware.gateway.utlis.exception.application.ApplicationException
+import com.jaramgroupware.gateway.utlis.exception.authentication.AuthenticationException
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler
+import org.springframework.core.ResolvableType
 import org.springframework.core.annotation.Order
+import org.springframework.core.codec.Hints
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.codec.json.Jackson2JsonEncoder
 import org.springframework.stereotype.Component
+import org.springframework.web.ErrorResponse
 import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 import java.awt.PageAttributes
+import java.time.LocalDateTime
 
-//TODO : 에러 핸들링
 @Component
 @Order(-1)
 class GlobalExceptionHandler(
@@ -16,20 +25,24 @@ class GlobalExceptionHandler(
 ) : ErrorWebExceptionHandler {
     override fun handle(exchange: ServerWebExchange, ex: Throwable): Mono<Void> {
         val response = exchange.response
-        response.headers.contentType = PageAttributes.MediaType.APPLICATION_JSON
+        val request = exchange.request
 
+        response.headers.contentType = MediaType.APPLICATION_JSON
+
+        val path = request.path.value()
         val errorResponse = when (ex) {
-            // Spring Web Server 관련 오류의 경우 Spring 오류 메시지를 사용
-            is ResponseStatusException -> ErrorResponse(code = ErrorCode.FRAME_WORK_INTERNAL_ERROR)
-            is BusinessException -> {
-                response.statusCode = HttpStatus.valueOf(ex.errorCode.status)
-                ErrorResponse(code = ex.errorCode)
-            }
+
+            is ApplicationException -> ErrorResponseDto(ex, path)
+            is AuthenticationException -> ErrorResponseDto(ex, path)
             // 그외 오류는 ErrorCode.UNDEFINED_ERROR 기반으로 메시지를 사용
-            else -> {
-                response.statusCode = HttpStatus.valueOf(ErrorCode.UNDEFINED_ERROR.status)
-                ErrorResponse(code = ErrorCode.UNDEFINED_ERROR)
-            }
+            else -> ErrorResponseDto(
+                timestamp = LocalDateTime.now(),
+                status = HttpStatus.INTERNAL_SERVER_ERROR,
+                errorCode = "GW-0000",
+                error = "UNDEFINED_ERROR",
+                message = "서버에 알 수 없는 에러가 발생했습니다.",
+                path = path
+            )
         }
 
         return response.writeWith(
