@@ -10,7 +10,7 @@ class MemberCustomRepositoryImpl(
 ) : MemberCustomRepository {
     override fun findMemberById(id: String): Mono<Member> {
 
-        val query = "SELECT * FROM MEMBER AS M WHERE M.MEMBER_PK = ?"
+        val query = "SELECT * FROM MEMBER AS M WHERE M.MEMBER_PK = ?".trimIndent()
         return client.sql(query)
             .bind(0, id)
             .map(memberMapper)

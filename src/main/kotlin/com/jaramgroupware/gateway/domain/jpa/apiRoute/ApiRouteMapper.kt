@@ -15,10 +15,11 @@ class ApiRouteMapper : BiFunction<Row, RowMetadata, ApiRoute> {
         return ApiRoute(
             id = row.get("API_ROUTE_PK", Int::class.java)!!,
             path = row.get("API_ROUTE_PATH", String::class.java)!!,
-            role = Role(
-                id = row.get("ROLE_PK", Int::class.java)!!,
-                name = row.get("ROLE_NM", String::class.java)!!
-            ),
+            role = if (row.get("ROLE_PK") != null)
+                Role(
+                    id = row.get("ROLE_PK", Int::class.java)!!,
+                    name = row.get("ROLE_NM", String::class.java)!!
+                ) else null,
             service = ServiceInfo(
                 id = row.get("SERVICE_PK", Int::class.java)!!,
                 name = row.get("SERVICE_NM", String::class.java)!!,

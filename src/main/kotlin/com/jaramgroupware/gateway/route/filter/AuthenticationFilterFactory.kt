@@ -38,7 +38,7 @@ class AuthenticationFilterFactory(
     )
 
     override fun newConfig(): Config {
-        return newConfig()
+        return Config()
     }
 
     override fun apply(config: Config): GatewayFilter {
@@ -151,25 +151,38 @@ class AuthenticationFilterFactory(
             TokenCacheResponseDto.CacheType.NOT_VALID -> {
                 logger.debug("AuthenticationFilter Token Cache Not Found. - token : $token")
                 val tokenInfo = firebaseClient.verifyAndDecodeToken(token, true)
-                return memberService.findMemberById(tokenInfo.uid!!).flatMap { it ->
 
-                    if (it.isNull()) throw AuthenticationException(
-                        message = "해당 유저의 정보를 찾을 수 없습니다. 정보 입력을 완료해주세요.",
-                        errorCode = AuthenticationErrorCode.USER_NOT_FOUND
-                    )
+                val role = memberService.findMemberById(tokenInfo.uid!!).flatMap {
+                    if(it.isNull()){
+                        throw AuthenticationException(
+                            message = "존재하지 않는 유저입니다.",
+                            errorCode = AuthenticationErrorCode.USER_NOT_FOUND
+                        )
+                    }
+                    return@flatMap Mono.just(it.roleId!!)
+                }.onErrorMap { handleException(it) }
 
+                val newRequest = role.flatMap {
                     val cacheAddRequestDto = TokenCacheAddRequestDto(
                         token = token,
                         uid = tokenInfo.uid,
                         ttl = Duration.between(LocalDateTime.now(), tokenInfo.exp).toMillis(),
-                        roleId = it.roleId
+                        roleId = it
                     )
                     tokenCacheService.addCache(cacheAddRequestDto)
 
-                    val newRequest =
-                        createNewRequest(request = exchange.request, uid = it.id, roleId = it.roleId, mode = "Fully")
-                    return@flatMap chain.filter(exchange.mutate().request(newRequest).build())
-                }
+                    return@flatMap Mono.just(
+                        createNewRequest(
+                            request = exchange.request,
+                            uid = tokenInfo.uid,
+                            roleId = it,
+                            mode = "Fully"
+                        )
+                    )
+                }.onErrorMap { handleException(it) }
+
+                return newRequest.flatMap { chain.filter(exchange.mutate().request(it).build()) }
+
             }
 
             TokenCacheResponseDto.CacheType.FULLY -> {
@@ -184,11 +197,7 @@ class AuthenticationFilterFactory(
                 logger.debug("AuthenticationFilter Update Token. - token : $token")
 
                 return memberService.findMemberById(cache.uid).flatMap { it ->
-
-                    if (it.isNull()) throw AuthenticationException(
-                        message = "해당 유저의 정보를 찾을 수 없습니다. 정보 입력을 완료해주세요.",
-                        errorCode = AuthenticationErrorCode.USER_NOT_FOUND
-                    )
+                    assert(!it.isNull())
 
                     val cacheAddRequestDto = TokenCacheAddRequestDto(
                         token = token,
@@ -203,14 +212,13 @@ class AuthenticationFilterFactory(
                     val newRequest =
                         createNewRequest(request = exchange.request, uid = it.id, roleId = it.roleId, mode = "Fully")
                     return@flatMap chain.filter(exchange.mutate().request(newRequest).build())
-                }
-
+                }.onErrorMap { handleException(it) }
             }
         }
     }
 
     /**
-     * 해당토큰이 유효하고, 유저 정보 체크도 성공하면, 해당 정보를 리턴하지만 실패하면 null 정보를 보냅니다.
+     * 해당 토큰이 유효하고, 유저 정보 체크도 성공하면, 해당 정보를 리턴하지만 실패하면 null 정보를 보냅니다.
      *
      * @param chain
      * @param exchange
@@ -271,6 +279,24 @@ class AuthenticationFilterFactory(
         }
     }
 
+    private fun handleException(exception: Throwable):Throwable {
+        logger.info("AuthenticationFilter Exception. - ${exception.javaClass} / ${exception.message}")
+        when (exception) {
+            is AuthenticationException -> {
+                throw exception
+            }
+            is ApplicationException -> {
+                throw exception
+            }
+            else -> {
+                throw ApplicationException(
+                    message = "알 수 없는 에러가 발생했습니다.",
+                    errorCode = ApplicationErrorCode.UNKNOWN_ERROR
+                )
+            }
+        }
+    }
+
     private fun createNewRequest(
         request: ServerHttpRequest,
         uid: String?,
@@ -298,7 +324,7 @@ class AuthenticationFilterFactory(
             val roleId = it.roleId
             val newRequest = createNewRequest(request = request, uid = uid, roleId = roleId, mode = "isOptional")
             return@flatMap chain.filter(exchange.mutate().request(newRequest).build())
-        }
+        }.onErrorMap { handleException(it) }
     }
 
     enum class AuthFilterMode {

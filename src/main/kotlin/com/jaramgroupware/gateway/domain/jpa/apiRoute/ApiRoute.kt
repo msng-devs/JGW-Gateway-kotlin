@@ -24,7 +24,7 @@ data class ApiRoute(
     val pathVariable: String?,
 
     @Transient
-    val role: Role,
+    val role: Role?,
 
     @Transient
     val service: ServiceInfo,
