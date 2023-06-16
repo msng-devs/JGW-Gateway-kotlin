@@ -67,6 +67,7 @@ class FirebaseClient(
             uid = uid,
             exp = expDataTime
         )
+
     }
 
     /**

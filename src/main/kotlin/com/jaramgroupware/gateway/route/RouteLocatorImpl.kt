@@ -136,48 +136,51 @@ class RouteLocatorImpl(
             }
         }
 
-        //set path params
-        if (route.pathVariable.isNotBlank()) {
-
-            val pathParamAppliedPath = createPathParamPath(pathParam = route.pathVariable, routePath = route.path)
-            booleanSpec.filters { f: GatewayFilterSpec ->
-                f.filters(
-                    setPathGatewayFilterFactory.apply { config: SetPathGatewayFilterFactory.Config ->
-                        config.template = pathParamAppliedPath
-                    })
-            }
-        }
+//        //set path params
+//        if (route.pathVariable.isNotBlank()) {
+//
+//            val pathParamAppliedPath = createPathParamPath(pathParam = route.pathVariable, routePath = route.path)
+//            logger.info("path param applied path : {}", pathParamAppliedPath)
+//            booleanSpec.filters { f: GatewayFilterSpec ->
+//                f.filters(
+//                    setPathGatewayFilterFactory.apply { config: SetPathGatewayFilterFactory.Config ->
+//                        config.template = pathParamAppliedPath
+//                    })
+//            }
+//        }
         //set domain and return route
         return booleanSpec.uri(route.serviceDomain)
     }
 
-    /**
-     * path param을 적용한 path를 생성하는 함수.
-     *
-     * @param pathParam 적용할 path params. ;로 구분되어야 합니다. ex) {id};{name}
-     * @param routePath 적용할 path. ex) /api/v1/member/{id}
-     * @return
-     */
-    private fun createPathParamPath(pathParam:String,routePath:String):String{
-        val pathParams = pathParam.split(";")
-
-        var pathParamIndex = 0
-
-        val newUrl = StringBuilder()
-
-        for (path in routePath.split("/")) {
-            newUrl.append("/")
-            if (path.startsWith("{")) {
-                newUrl.append(pathParams[pathParamIndex])
-                pathParamIndex++
-            } else {
-                newUrl.append(path)
-            }
-        }
-        newUrl.append("/**")
-
-        return newUrl.toString()
-    }
+//    /**
+//     * path param을 적용한 path를 생성하는 함수.
+//     *
+//     * @param pathParam 적용할 path params. ;로 구분되어야 합니다. ex) {id};{name}
+//     * @param routePath 적용할 path. ex) /api/v1/member/{id}
+//     * @return
+//     */
+//    private fun createPathParamPath(pathParam:String,routePath:String):String{
+//        val pathParams = pathParam.split(";")
+//
+//        var pathParamIndex = 0
+//
+//        val newUrl = StringBuilder()
+//
+//        for (path in routePath.split("/")) {
+//
+//            if (path != "") newUrl.append("/")
+//
+//            if (path.startsWith("{")) {
+//                newUrl.append(pathParams[pathParamIndex])
+//                pathParamIndex++
+//            } else {
+//                newUrl.append(path)
+//            }
+//
+//        }
+//
+//        return newUrl.toString()
+//    }
 
 
 }

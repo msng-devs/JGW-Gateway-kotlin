@@ -1,7 +1,5 @@
 package com.jaramgroupware.gateway.route.filter
 
-import com.jaramgroupware.gateway.dto.tokenCache.TokenCacheAddRequestDto
-import com.jaramgroupware.gateway.dto.tokenCache.TokenCacheResponseDto
 import com.jaramgroupware.gateway.security.firebase.FirebaseClient
 import com.jaramgroupware.gateway.service.MemberService
 import com.jaramgroupware.gateway.service.TokenCacheService
@@ -20,8 +18,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Component
 class AuthenticationFilterFactory(
@@ -106,31 +102,10 @@ class AuthenticationFilterFactory(
         val request = exchange.request
         val token = checkContainsAndExtractToken(request)
 
-        lateinit var uid: String
+        val tokenInfo = firebaseClient.verifyAndDecodeToken(token, true)
 
-        //check cache
-        val cache = tokenCacheService.getCache(token)
-
-        when (cache.isNull()) {
-            true -> {
-                logger.debug("AuthenticationFilter Token Cache Not Found. - token : $token")
-                val tokenInfo = firebaseClient.verifyAndDecodeToken(token, true)
-                val tokenCacheAddRequestDto = TokenCacheAddRequestDto(
-                    token = token,
-                    uid = tokenInfo.uid!!,
-                    ttl = Duration.between(LocalDateTime.now(), tokenInfo.exp).toMillis(),
-                    roleId = null
-                )
-                tokenCacheService.addCache(tokenCacheAddRequestDto)
-
-                uid = tokenInfo.uid
-            }
-
-            false -> {
-                uid = cache.uid
-            }
-        }
-        val newRequest = createNewRequest(request = exchange.request, uid = uid, roleId = null, mode = "isOnlyToken")
+        val newRequest =
+            createNewRequest(request = exchange.request, uid = tokenInfo.uid, roleId = null, mode = "isOnlyToken")
         return chain.filter(exchange.mutate().request(newRequest).build())
     }
 
@@ -144,77 +119,31 @@ class AuthenticationFilterFactory(
     private fun authenticationFully(chain: GatewayFilterChain, exchange: ServerWebExchange): Mono<Void> {
         val request = exchange.request
         val token = checkContainsAndExtractToken(request)
-        //check cache
-        val cache = tokenCacheService.getCache(token)
 
-        when (cache.getCacheType()) {
-            TokenCacheResponseDto.CacheType.NOT_VALID -> {
-                logger.debug("AuthenticationFilter Token Cache Not Found. - token : $token")
-                val tokenInfo = firebaseClient.verifyAndDecodeToken(token, true)
+        val tokenInfo = firebaseClient.verifyAndDecodeToken(token, true)
 
-                val role = memberService.findMemberById(tokenInfo.uid!!).flatMap {
-                    if(it.isNull()){
-                        throw AuthenticationException(
-                            message = "존재하지 않는 유저입니다.",
-                            errorCode = AuthenticationErrorCode.USER_NOT_FOUND
-                        )
-                    }
-                    return@flatMap Mono.just(it.roleId!!)
-                }.onErrorMap { handleException(it) }
-
-                val newRequest = role.flatMap {
-                    val cacheAddRequestDto = TokenCacheAddRequestDto(
-                        token = token,
-                        uid = tokenInfo.uid,
-                        ttl = Duration.between(LocalDateTime.now(), tokenInfo.exp).toMillis(),
-                        roleId = it
-                    )
-                    tokenCacheService.addCache(cacheAddRequestDto)
-
-                    return@flatMap Mono.just(
-                        createNewRequest(
-                            request = exchange.request,
-                            uid = tokenInfo.uid,
-                            roleId = it,
-                            mode = "Fully"
-                        )
-                    )
-                }.onErrorMap { handleException(it) }
-
-                return newRequest.flatMap { chain.filter(exchange.mutate().request(it).build()) }
-
+        val role = memberService.findMemberById(tokenInfo.uid!!).flatMap {
+            if (it.isNull()) {
+                throw AuthenticationException(
+                    message = "존재하지 않는 유저입니다.",
+                    errorCode = AuthenticationErrorCode.USER_NOT_FOUND
+                )
             }
+            return@flatMap Mono.just(it.roleId!!)
+        }.onErrorMap { handleException(it) }
 
-            TokenCacheResponseDto.CacheType.FULLY -> {
-                val newRequest =
-                    createNewRequest(request = exchange.request, uid = cache.uid, roleId = cache.roleId, mode = "Fully")
-                return chain.filter(exchange.mutate().request(newRequest).build())
-            }
+        val newRequest = role.flatMap {
+            return@flatMap Mono.just(
+                createNewRequest(
+                    request = exchange.request,
+                    uid = tokenInfo.uid,
+                    roleId = it,
+                    mode = "Fully"
+                )
+            )
+        }.onErrorMap { handleException(it) }
 
-            // 토큰 상태가 INVALID 일 경우와 유사한 동작을 하지만, 다른 동작이 있음.
-            // 해당 상태에서는 기존 캐시를 제거하고, 새로운 캐시로 수정함.
-            TokenCacheResponseDto.CacheType.ONLY_TOKEN -> {
-                logger.debug("AuthenticationFilter Update Token. - token : $token")
-
-                return memberService.findMemberById(cache.uid).flatMap { it ->
-                    assert(!it.isNull())
-
-                    val cacheAddRequestDto = TokenCacheAddRequestDto(
-                        token = token,
-                        uid = cache.uid,
-                        ttl = cache.ttl!!,
-                        roleId = it.roleId
-                    )
-
-                    tokenCacheService.deleteCache(token)
-                    tokenCacheService.addCache(cacheAddRequestDto)
-
-                    val newRequest =
-                        createNewRequest(request = exchange.request, uid = it.id, roleId = it.roleId, mode = "Fully")
-                    return@flatMap chain.filter(exchange.mutate().request(newRequest).build())
-                }.onErrorMap { handleException(it) }
-            }
-        }
+        return newRequest.flatMap { chain.filter(exchange.mutate().request(it).build()) }
     }
 
     /**
@@ -235,59 +164,31 @@ class AuthenticationFilterFactory(
             return chain.filter(exchange.mutate().request(newRequest).build())
         }
 
-        //check cache
-        val cache = tokenCacheService.getCache(token)
+        val tokenInfo = firebaseClient.verifyAndDecodeToken(token, false)
 
-        when (cache.getCacheType()) {
-            TokenCacheResponseDto.CacheType.NOT_VALID -> {
-                val tokenInfo = firebaseClient.verifyAndDecodeToken(token, false)
-
-                return if (tokenInfo.isNull()) {
-                    val newRequest = createNewRequest(request = request, uid = null, roleId = null, mode = "isOptional")
-                    chain.filter(exchange.mutate().request(newRequest).build())
-                } else {
-                    val tokenCacheAddRequestDto = TokenCacheAddRequestDto(
-                        token = token,
-                        uid = tokenInfo.uid!!,
-                        ttl = Duration.between(LocalDateTime.now(), tokenInfo.exp).toMillis(),
-                        roleId = null
-                    )
-                    tokenCacheService.addCache(tokenCacheAddRequestDto)
-                    findMemberAndCreateOptionalRequest(
-                        request = request,
-                        uid = cache.uid,
-                        chain = chain,
-                        exchange = exchange
-                    )
-                }
-            }
-
-            TokenCacheResponseDto.CacheType.FULLY -> {
+        return if (tokenInfo.isNull()) {
+            val newRequest = createNewRequest(request = request, uid = null, roleId = null, mode = "isOptional")
+            chain.filter(exchange.mutate().request(newRequest).build())
+        } else {
+            return memberService.findMemberById(tokenInfo.uid!!).flatMap {
                 val newRequest =
-                    createNewRequest(request = request, uid = cache.uid, roleId = cache.roleId, mode = "isOptional")
-                return chain.filter(exchange.mutate().request(newRequest).build())
-            }
-
-            TokenCacheResponseDto.CacheType.ONLY_TOKEN -> {
-                return findMemberAndCreateOptionalRequest(
-                    request = request,
-                    uid = cache.uid,
-                    chain = chain,
-                    exchange = exchange
-                )
-            }
+                    createNewRequest(request = request, uid = tokenInfo.uid, roleId = it.roleId, mode = "isOptional")
+                return@flatMap chain.filter(exchange.mutate().request(newRequest).build())
+            }.onErrorMap { handleException(it) }
         }
     }
 
-    private fun handleException(exception: Throwable):Throwable {
+    private fun handleException(exception: Throwable): Throwable {
         logger.info("AuthenticationFilter Exception. - ${exception.javaClass} / ${exception.message}")
         when (exception) {
             is AuthenticationException -> {
                 throw exception
             }
+
             is ApplicationException -> {
                 throw exception
             }
+
             else -> {
                 throw ApplicationException(
                     message = "알 수 없는 에러가 발생했습니다.",
@@ -314,18 +215,6 @@ class AuthenticationFilterFactory(
         return newRequest
     }
 
-    private fun findMemberAndCreateOptionalRequest(
-        request: ServerHttpRequest,
-        uid: String,
-        chain: GatewayFilterChain,
-        exchange: ServerWebExchange
-    ): Mono<Void> {
-        return memberService.findMemberById(uid).flatMap {
-            val roleId = it.roleId
-            val newRequest = createNewRequest(request = request, uid = uid, roleId = roleId, mode = "isOptional")
-            return@flatMap chain.filter(exchange.mutate().request(newRequest).build())
-        }.onErrorMap { handleException(it) }
-    }
 
     enum class AuthFilterMode {
         FULLY, ONLY_TOKEN, OPTIONAL
