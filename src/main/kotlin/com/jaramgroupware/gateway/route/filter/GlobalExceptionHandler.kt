@@ -56,7 +56,7 @@ class GlobalExceptionHandler(
                 path = path
             )
         }
-
+        response.statusCode = errorResponse.status
         return response.writeWith(
             Jackson2JsonEncoder(objectMapper).encode(
                 Mono.just(errorResponse),

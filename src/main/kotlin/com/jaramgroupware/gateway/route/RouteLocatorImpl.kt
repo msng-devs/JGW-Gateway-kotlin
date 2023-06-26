@@ -1,10 +1,7 @@
 package com.jaramgroupware.gateway.route
 
 import com.jaramgroupware.gateway.dto.apiRoute.ApiRouteResponseDto
-import com.jaramgroupware.gateway.route.filter.AuthenticationFilterFactory
-import com.jaramgroupware.gateway.route.filter.CleanRequestFilterFactory
-import com.jaramgroupware.gateway.route.filter.GatewayRefreshFilterFactory
-import com.jaramgroupware.gateway.route.filter.RBACFilterFactory
+import com.jaramgroupware.gateway.route.filter.*
 import com.jaramgroupware.gateway.service.ApiRouteService
 import lombok.RequiredArgsConstructor
 import lombok.extern.slf4j.Slf4j
@@ -18,7 +15,7 @@ import org.springframework.util.StringUtils
 import reactor.core.publisher.Flux
 import java.util.function.Function
 
-@Slf4j
+
 class RouteLocatorImpl(
     @Autowired val apiRouteService: ApiRouteService,
     @Autowired val routeLocatorBuilder: RouteLocatorBuilder,
@@ -27,7 +24,7 @@ class RouteLocatorImpl(
     @Autowired val requestFilterFactory: CleanRequestFilterFactory,
     @Autowired val authenticationFilterFactory: AuthenticationFilterFactory,
     @Autowired val rbacFilterFactory: RBACFilterFactory,
-    @Autowired val gatewayRefreshFilterFactory: GatewayRefreshFilterFactory
+    @Autowired val gatewayRefreshFilterFactory: GatewayRefreshFilterFactory,
 ) : RouteLocator {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -75,6 +72,7 @@ class RouteLocatorImpl(
             it.filters(requestFilterFactory.apply { config ->
                 config.isEnable = true
             })
+
         }
 
         //process route options.

@@ -17,6 +17,6 @@ class MemberService(
 
         return memberRepository.findMemberById(id)
             .map { member -> MemberResponseDto(member) }
-            .switchIfEmpty{ Mono.just(MemberResponseDto(null, null)) }
+            .switchIfEmpty{ Mono.just(MemberResponseDto(null, null,null)) }
     }
 }

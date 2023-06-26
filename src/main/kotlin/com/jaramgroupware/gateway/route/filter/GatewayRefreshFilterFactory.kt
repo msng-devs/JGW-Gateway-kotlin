@@ -5,7 +5,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.gateway.filter.GatewayFilter
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory
+import org.springframework.stereotype.Component
 
+@Component
 class GatewayRefreshFilterFactory(
     @Autowired val gatewayEventPublisher: GatewayEventPublisher
 )  : GatewayFilterFactory<GatewayRefreshFilterFactory.Config> {
