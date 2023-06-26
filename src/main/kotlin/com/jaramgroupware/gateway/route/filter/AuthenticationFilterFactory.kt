@@ -2,7 +2,6 @@ package com.jaramgroupware.gateway.route.filter
 
 import com.jaramgroupware.gateway.security.firebase.FirebaseClient
 import com.jaramgroupware.gateway.service.MemberService
-import com.jaramgroupware.gateway.service.TokenCacheService
 import com.jaramgroupware.gateway.utlis.exception.application.ApplicationErrorCode
 import com.jaramgroupware.gateway.utlis.exception.application.ApplicationException
 import com.jaramgroupware.gateway.utlis.exception.authentication.AuthenticationErrorCode
