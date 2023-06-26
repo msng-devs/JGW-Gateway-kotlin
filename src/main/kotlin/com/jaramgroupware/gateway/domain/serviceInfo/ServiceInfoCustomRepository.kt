@@ -1,4 +1,4 @@
-package com.jaramgroupware.gateway.domain.jpa.serviceInfo
+package com.jaramgroupware.gateway.domain.serviceInfo
 
 import reactor.core.publisher.Mono
 

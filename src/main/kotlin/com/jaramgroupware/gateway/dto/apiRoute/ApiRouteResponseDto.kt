@@ -1,6 +1,6 @@
 package com.jaramgroupware.gateway.dto.apiRoute
 
-import com.jaramgroupware.gateway.domain.jpa.apiRoute.ApiRoute
+import com.jaramgroupware.gateway.domain.apiRoute.ApiRoute
 
 
 data class ApiRouteResponseDto(

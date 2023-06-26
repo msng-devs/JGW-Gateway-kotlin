@@ -1,4 +1,4 @@
-package com.jaramgroupware.gateway.domain.jpa.apiRoute
+package com.jaramgroupware.gateway.domain.apiRoute
 
 import org.springframework.data.repository.reactive.ReactiveCrudRepository
 import org.springframework.stereotype.Repository

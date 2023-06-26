@@ -1,16 +1,15 @@
-package com.jaramgroupware.gateway.domain.jpa.method
+package com.jaramgroupware.gateway.domain.routeOption
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
-@Table(name = "METHOD")
-data class Method(
+@Table(name = "ROUTE_OPTION")
+data class RouteOption (
     @Id
-    @Column("METHOD_PK")
+    @Column("ROUTE_OPTION_PK")
     val id: Int,
 
-    @Column("METHOD_NM")
+    @Column("ROUTE_OPTION_NM")
     val name: String
-
 )

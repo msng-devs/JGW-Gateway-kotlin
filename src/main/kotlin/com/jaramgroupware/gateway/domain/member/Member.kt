@@ -1,4 +1,4 @@
-package com.jaramgroupware.gateway.domain.jpa.member
+package com.jaramgroupware.gateway.domain.member
 
 import jakarta.validation.constraints.Email
 import org.springframework.data.annotation.Id
