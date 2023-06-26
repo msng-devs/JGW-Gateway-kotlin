@@ -1,6 +1,6 @@
 package com.jaramgroupware.gateway.dto.member
 
-import com.jaramgroupware.gateway.domain.jpa.member.Member
+import com.jaramgroupware.gateway.domain.member.Member
 
 data class MemberResponseDto(
     var id: String?,

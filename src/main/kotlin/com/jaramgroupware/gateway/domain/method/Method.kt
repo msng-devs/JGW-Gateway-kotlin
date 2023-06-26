@@ -1,15 +1,16 @@
-package com.jaramgroupware.gateway.domain.jpa.role
+package com.jaramgroupware.gateway.domain.method
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
-@Table(name = "ROLE")
-data class Role(
+@Table(name = "METHOD")
+data class Method(
     @Id
-    @Column("ROLE_PK")
+    @Column("METHOD_PK")
     val id: Int,
 
-    @Column("ROLE_NM")
+    @Column("METHOD_NM")
     val name: String
+
 )

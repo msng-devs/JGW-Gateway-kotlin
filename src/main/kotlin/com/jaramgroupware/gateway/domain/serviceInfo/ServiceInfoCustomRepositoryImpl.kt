@@ -1,4 +1,4 @@
-package com.jaramgroupware.gateway.domain.jpa.serviceInfo
+package com.jaramgroupware.gateway.domain.serviceInfo
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.r2dbc.core.DatabaseClient

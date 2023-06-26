@@ -1,4 +1,4 @@
-package com.jaramgroupware.gateway.domain.jpa.member
+package com.jaramgroupware.gateway.domain.member
 
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata

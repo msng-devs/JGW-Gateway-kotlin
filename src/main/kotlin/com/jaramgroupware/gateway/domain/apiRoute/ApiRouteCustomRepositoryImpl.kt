@@ -1,4 +1,4 @@
-package com.jaramgroupware.gateway.domain.jpa.apiRoute
+package com.jaramgroupware.gateway.domain.apiRoute
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.r2dbc.core.DatabaseClient

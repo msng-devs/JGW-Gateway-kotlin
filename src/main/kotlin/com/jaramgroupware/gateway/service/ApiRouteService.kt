@@ -1,6 +1,6 @@
 package com.jaramgroupware.gateway.service
 
-import com.jaramgroupware.gateway.domain.jpa.apiRoute.ApiRouteRepository
+import com.jaramgroupware.gateway.domain.apiRoute.ApiRouteRepository
 import com.jaramgroupware.gateway.dto.apiRoute.ApiRouteResponseDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

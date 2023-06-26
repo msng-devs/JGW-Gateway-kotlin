@@ -1,15 +1,15 @@
-package com.jaramgroupware.gateway.domain.jpa.routeOption
+package com.jaramgroupware.gateway.domain.role
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
-@Table(name = "ROUTE_OPTION")
-data class RouteOption (
+@Table(name = "ROLE")
+data class Role(
     @Id
-    @Column("ROUTE_OPTION_PK")
+    @Column("ROLE_PK")
     val id: Int,
 
-    @Column("ROUTE_OPTION_NM")
+    @Column("ROLE_NM")
     val name: String
 )

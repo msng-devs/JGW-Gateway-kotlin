@@ -1,9 +1,9 @@
-package com.jaramgroupware.gateway.domain.jpa.apiRoute
+package com.jaramgroupware.gateway.domain.apiRoute
 
-import com.jaramgroupware.gateway.domain.jpa.method.Method
-import com.jaramgroupware.gateway.domain.jpa.role.Role
-import com.jaramgroupware.gateway.domain.jpa.routeOption.RouteOption
-import com.jaramgroupware.gateway.domain.jpa.serviceInfo.ServiceInfo
+import com.jaramgroupware.gateway.domain.method.Method
+import com.jaramgroupware.gateway.domain.role.Role
+import com.jaramgroupware.gateway.domain.routeOption.RouteOption
+import com.jaramgroupware.gateway.domain.serviceInfo.ServiceInfo
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
 import org.springframework.stereotype.Component
