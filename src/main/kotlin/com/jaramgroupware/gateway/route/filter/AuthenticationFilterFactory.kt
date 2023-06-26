@@ -129,6 +129,14 @@ class AuthenticationFilterFactory(
                     errorCode = AuthenticationErrorCode.USER_NOT_FOUND
                 )
             }
+
+            if(!it.isActive!!){
+                throw AuthenticationException(
+                    message = "비활성화된 유저입니다.",
+                    errorCode = AuthenticationErrorCode.USER_NOT_ACTIVE
+                )
+
+            }
             return@flatMap Mono.just(it.roleId!!)
         }.onErrorMap { handleException(it) }
 

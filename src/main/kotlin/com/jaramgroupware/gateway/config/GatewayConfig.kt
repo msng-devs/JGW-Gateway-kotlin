@@ -3,6 +3,7 @@ package com.jaramgroupware.gateway.config
 import com.jaramgroupware.gateway.route.RouteLocatorImpl
 import com.jaramgroupware.gateway.route.filter.AuthenticationFilterFactory
 import com.jaramgroupware.gateway.route.filter.CleanRequestFilterFactory
+import com.jaramgroupware.gateway.route.filter.GatewayRefreshFilterFactory
 import com.jaramgroupware.gateway.route.filter.RBACFilterFactory
 import com.jaramgroupware.gateway.service.ApiRouteService
 import org.springframework.cloud.gateway.filter.factory.SetPathGatewayFilterFactory
@@ -20,7 +21,8 @@ class GatewayConfig {
         setPathGatewayFilterFactory: SetPathGatewayFilterFactory,
         cleanRequestFilterFactory: CleanRequestFilterFactory,
         authenticationFilterFactory: AuthenticationFilterFactory,
-        rbacFilterFactory: RBACFilterFactory
+        rbacFilterFactory: RBACFilterFactory,
+        gatewayRefreshFilterFactory: GatewayRefreshFilterFactory
     ): RouteLocator {
         return RouteLocatorImpl(
             apiRouteService = apiRouteService,
@@ -29,7 +31,8 @@ class GatewayConfig {
             cleanRequestFilterFactory = cleanRequestFilterFactory,
             requestFilterFactory = cleanRequestFilterFactory,
             authenticationFilterFactory = authenticationFilterFactory,
-            rbacFilterFactory = rbacFilterFactory
+            rbacFilterFactory = rbacFilterFactory,
+            gatewayRefreshFilterFactory = gatewayRefreshFilterFactory
         )
     }
 

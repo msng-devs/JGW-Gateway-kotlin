@@ -4,11 +4,13 @@ import com.jaramgroupware.gateway.domain.jpa.member.Member
 
 data class MemberResponseDto(
     var id: String?,
-    var roleId: Int?
+    var roleId: Int?,
+    var isActive: Boolean?
 ) {
     constructor(member: Member) : this(
         id = member.id,
-        roleId = member.role
+        roleId = member.role,
+        isActive = member.isActive
     )
 
     fun isNull(): Boolean {

@@ -3,6 +3,7 @@ package com.jaramgroupware.gateway.route
 import com.jaramgroupware.gateway.dto.apiRoute.ApiRouteResponseDto
 import com.jaramgroupware.gateway.route.filter.AuthenticationFilterFactory
 import com.jaramgroupware.gateway.route.filter.CleanRequestFilterFactory
+import com.jaramgroupware.gateway.route.filter.GatewayRefreshFilterFactory
 import com.jaramgroupware.gateway.route.filter.RBACFilterFactory
 import com.jaramgroupware.gateway.service.ApiRouteService
 import lombok.RequiredArgsConstructor
@@ -25,7 +26,8 @@ class RouteLocatorImpl(
     @Autowired val cleanRequestFilterFactory: CleanRequestFilterFactory,
     @Autowired val requestFilterFactory: CleanRequestFilterFactory,
     @Autowired val authenticationFilterFactory: AuthenticationFilterFactory,
-    @Autowired val rbacFilterFactory: RBACFilterFactory
+    @Autowired val rbacFilterFactory: RBACFilterFactory,
+    @Autowired val gatewayRefreshFilterFactory: GatewayRefreshFilterFactory
 ) : RouteLocator {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -135,19 +137,15 @@ class RouteLocatorImpl(
 
             }
         }
+        if(route.path == "/api/v1/refresh/**"){
+            booleanSpec.filters {
+                it.filters(
+                    gatewayRefreshFilterFactory.apply { config : GatewayRefreshFilterFactory.Config ->
+                        config.isEnable = true
+                    })
+            }
+        }
 
-//        //set path params
-//        if (route.pathVariable.isNotBlank()) {
-//
-//            val pathParamAppliedPath = createPathParamPath(pathParam = route.pathVariable, routePath = route.path)
-//            logger.info("path param applied path : {}", pathParamAppliedPath)
-//            booleanSpec.filters { f: GatewayFilterSpec ->
-//                f.filters(
-//                    setPathGatewayFilterFactory.apply { config: SetPathGatewayFilterFactory.Config ->
-//                        config.template = pathParamAppliedPath
-//                    })
-//            }
-//        }
         //set domain and return route
         return booleanSpec.uri(route.serviceDomain)
     }

@@ -7,4 +7,5 @@ enum class AuthenticationErrorCode (val httpCode:Int ,val errorCode:String,val t
     INVALID_TOKEN(403,"GW_AUTH_002","Invalid Token"),
     USER_NOT_FOUND(404,"GW_AUTH_003","User Not Found"),
     INVALID_ROLE(403,"GW_AUTH_004","Invalid Role"),
+    USER_NOT_ACTIVE(403,"GW_AUTH_005","User Not Active"),
 }
