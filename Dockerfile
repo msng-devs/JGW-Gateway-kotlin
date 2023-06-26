@@ -1,4 +1,4 @@
-FROM openjdk:17 as builder
+FROM openjdk:17-jdk-slim as builder
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle.kts .
@@ -8,7 +8,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew bootjar
 
 
-FROM openjdk:17
+FROM openjdk:17-jdk-slim
 COPY --from=builder build/libs/*.jar app.jar
 EXPOSE 50001
 ENTRYPOINT ["java","-Dspring.profiles.active=product","-jar","/app.jar"]
