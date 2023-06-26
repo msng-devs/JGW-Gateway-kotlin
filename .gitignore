@@ -38,7 +38,9 @@ out/
 
 #spring config
 application.properties
-
+application-local.properties
+application-product.properties
+application-test.properties
 #firebase config
 firebase.json
 

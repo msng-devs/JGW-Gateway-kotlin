@@ -49,10 +49,6 @@ dependencies {
     // https://mvnrepository.com/artifact/io.grpc/grpc-netty
     implementation("io.grpc:grpc-netty:1.56.0")
 
-
-    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis-reactive
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
-
 }
 
 dependencyManagement {
