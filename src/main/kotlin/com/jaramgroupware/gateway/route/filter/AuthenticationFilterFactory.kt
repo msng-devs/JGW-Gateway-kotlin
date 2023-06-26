@@ -22,7 +22,6 @@ import reactor.core.publisher.Mono
 class AuthenticationFilterFactory(
     @Autowired val firebaseClient: FirebaseClient,
     @Autowired val memberService: MemberService,
-    @Autowired val tokenCacheService: TokenCacheService
 
 ) : GatewayFilterFactory<AuthenticationFilterFactory.Config> {
 
