@@ -23,7 +23,7 @@ class AuthenticationFilterFactory(
     @Autowired val firebaseClient: FirebaseClient,
     @Autowired val memberService: MemberService,
 
-) : GatewayFilterFactory<AuthenticationFilterFactory.Config> {
+    ) : GatewayFilterFactory<AuthenticationFilterFactory.Config> {
 
     private val logger = LoggerFactory.getLogger(RequestLoggingFilterFactory::class.java)
 
@@ -103,7 +103,13 @@ class AuthenticationFilterFactory(
         val tokenInfo = firebaseClient.verifyAndDecodeToken(token, true)
 
         val newRequest =
-            createNewRequest(request = exchange.request, uid = tokenInfo.uid, roleId = null, mode = "isOnlyToken")
+            createNewRequest(
+                request = exchange.request,
+                email = tokenInfo.email,
+                uid = tokenInfo.uid,
+                roleId = null,
+                mode = "isOnlyToken"
+            )
         return chain.filter(exchange.mutate().request(newRequest).build())
     }
 
@@ -128,7 +134,7 @@ class AuthenticationFilterFactory(
                 )
             }
 
-            if(!it.isActive!!){
+            if (!it.isActive!!) {
                 throw AuthenticationException(
                     message = "비활성화된 유저입니다.",
                     errorCode = AuthenticationErrorCode.USER_NOT_ACTIVE
@@ -142,6 +148,7 @@ class AuthenticationFilterFactory(
             return@flatMap Mono.just(
                 createNewRequest(
                     request = exchange.request,
+                    email = tokenInfo.email,
                     uid = tokenInfo.uid,
                     roleId = it,
                     mode = "Fully"
@@ -166,19 +173,26 @@ class AuthenticationFilterFactory(
 
         //토큰이 아에 없을 경우
         if (token.isEmpty()) {
-            val newRequest = createNewRequest(request = request, uid = null, roleId = null, mode = "isOptional")
+            val newRequest = createNewRequest(request = request, email = null , uid = null, roleId = null, mode = "isOptional")
             return chain.filter(exchange.mutate().request(newRequest).build())
         }
 
         val tokenInfo = firebaseClient.verifyAndDecodeToken(token, false)
 
         return if (tokenInfo.isNull()) {
-            val newRequest = createNewRequest(request = request, uid = null, roleId = null, mode = "isOptional")
+            val newRequest =
+                createNewRequest(request = request, uid = null, roleId = null, email = null, mode = "isOptional")
             chain.filter(exchange.mutate().request(newRequest).build())
         } else {
             return memberService.findMemberById(tokenInfo.uid!!).flatMap {
                 val newRequest =
-                    createNewRequest(request = request, uid = tokenInfo.uid, roleId = it.roleId, mode = "isOptional")
+                    createNewRequest(
+                        request = request,
+                        uid = tokenInfo.uid,
+                        roleId = it.roleId,
+                        email = tokenInfo.email,
+                        mode = "isOptional"
+                    )
                 return@flatMap chain.filter(exchange.mutate().request(newRequest).build())
             }.onErrorMap { handleException(it) }
         }
@@ -208,12 +222,14 @@ class AuthenticationFilterFactory(
         request: ServerHttpRequest,
         uid: String?,
         roleId: Int?,
+        email: String?,
         mode: String
     ): ServerHttpRequest {
         val newRequest = request
             .mutate()
             .header("user_pk", uid ?: "null")
             .header("role_pk", roleId.toString())
+            .header("user_email", email ?: "null")
             .build()
 
         val requestLog = TemplateLogger.createRequestLog(request)
