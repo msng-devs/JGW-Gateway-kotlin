@@ -36,7 +36,7 @@ class FirebaseClient(
 
         lateinit var uid: String
         lateinit var expDataTime: LocalDateTime
-
+        lateinit var email: String
         try {
 
             val decodedToken = firebaseAuth.verifyIdToken(token)
@@ -44,28 +44,32 @@ class FirebaseClient(
             expDataTime =
                 Instant.ofEpochSecond(((decodedToken.claims["exp"] as? Long)!!)).atZone(ZoneId.systemDefault())
                     .toLocalDateTime()
+            email = decodedToken.email ?: ""
             assert(decodedToken.isEmailVerified)
 
         } catch (e: FirebaseAuthException) {
             if (isCheckValid) processingFireBaseAuthException(e.authErrorCode)
             return TokenResponse(
                 uid = null,
-                exp = null
+                exp = null,
+                email = null
             )
         } catch (e: AssertionError) {
             if (isCheckValid) throw AuthenticationException(
                 message = "이메일 인증이 되지 않은 계정입니다. 이메일 인증을 완료해주세요.",
-                errorCode = AuthenticationErrorCode.INVALID_TOKEN
+                errorCode = AuthenticationErrorCode.INVALID_TOKEN,
             )
             return TokenResponse(
                 uid = null,
-                exp = null
+                exp = null,
+                email = null
             )
         }
 
         return TokenResponse(
             uid = uid,
-            exp = expDataTime
+            exp = expDataTime,
+            email = email
         )
 
     }

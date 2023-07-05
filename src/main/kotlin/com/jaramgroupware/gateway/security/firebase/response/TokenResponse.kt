@@ -4,7 +4,8 @@ import java.time.LocalDateTime
 
 data class TokenResponse(
     val uid: String?,
-    val exp: LocalDateTime?
+    val exp: LocalDateTime?,
+    val email: String?
 
 ){
     fun isNull(): Boolean {
