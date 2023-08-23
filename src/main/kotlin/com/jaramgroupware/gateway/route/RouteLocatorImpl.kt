@@ -53,7 +53,7 @@ class RouteLocatorImpl(
     private fun setPredicateSpec(route: ApiRouteResponseDto, predicateSpec: PredicateSpec): Buildable<Route?> {
 
         logger.info("SET {} | {} | {} : {}", route.serviceName, route.routeOptionName, route.methodName, route.path)
-
+        logger.debug("{} {}",route.routeOptionId, route.routeOptionName)
         //set route path. ex) /api/v1/member/{id} ...
         val booleanSpec = predicateSpec.path(route.path)
 
@@ -80,10 +80,12 @@ class RouteLocatorImpl(
             //NO_AUTH
             1 -> {
                 //nothing
+                logger.debug("apply NO_AUTH")
             }
 
             //AUTH
             2 -> {
+                logger.debug("apply AUTH")
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config ->
@@ -95,10 +97,11 @@ class RouteLocatorImpl(
 
             //ONLY_TOKEN_AUTH
             3 -> {
+                logger.debug("apply ONLY_TOKEN_AUTH")
                 booleanSpec.filters {
                     it.filters(
-                        authenticationFilterFactory.apply { config ->
-                            config.mode = AuthenticationFilterFactory.AuthFilterMode.ONLYTOKEN
+                        authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
+                            config.mode = AuthenticationFilterFactory.AuthFilterMode.ONLY_TOKEN
                         })
 
                 }
@@ -106,6 +109,7 @@ class RouteLocatorImpl(
 
             //RBAC
             4 -> {
+                logger.debug("apply RBAC")
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config ->
@@ -124,6 +128,7 @@ class RouteLocatorImpl(
 
             //AUTH_OPTIONAL
             5 -> {
+                logger.debug("apply AUTH_OPTIONAL")
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->

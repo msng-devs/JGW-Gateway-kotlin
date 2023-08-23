@@ -37,9 +37,9 @@ class AuthenticationFilterFactory(
 
     override fun apply(config: Config): GatewayFilter {
         return GatewayFilter { exchange, chain ->
-
+            logger.debug("AuthenticationFilterFactory Start {}",config.mode)
             when (config.mode) {
-                AuthFilterMode.ONLYTOKEN -> {
+                AuthFilterMode.ONLY_TOKEN -> {
                     return@GatewayFilter authenticationOnlyToken(exchange = exchange, chain = chain)
                 }
 
@@ -241,7 +241,7 @@ class AuthenticationFilterFactory(
 
 
     enum class AuthFilterMode {
-        FULLY, ONLYTOKEN, OPTIONAL
+        FULLY, ONLY_TOKEN, OPTIONAL
     }
 }
 
