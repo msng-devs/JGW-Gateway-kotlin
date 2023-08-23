@@ -33,7 +33,6 @@ class GlobalExceptionHandler(
 
         response.headers.contentType = MediaType.APPLICATION_JSON
         logger.info("GlobalExceptionHandler catch error: ${ex.javaClass}/ ${ex.message}, request -> ${TemplateLogger.createRequestLog(request)}")
-        logger.error(ex.stackTraceToString())
         val path = request.path.value()
         val errorResponse = when (ex) {
             is ResponseStatusException -> ErrorResponseDto(
