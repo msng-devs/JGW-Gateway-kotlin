@@ -39,7 +39,7 @@ class AuthenticationFilterFactory(
         return GatewayFilter { exchange, chain ->
 
             when (config.mode) {
-                AuthFilterMode.ONLY_TOKEN -> {
+                AuthFilterMode.ONLYTOKEN -> {
                     return@GatewayFilter authenticationOnlyToken(exchange = exchange, chain = chain)
                 }
 
@@ -173,7 +173,8 @@ class AuthenticationFilterFactory(
 
         //토큰이 아에 없을 경우
         if (token.isEmpty()) {
-            val newRequest = createNewRequest(request = request, email = null , uid = null, roleId = null, mode = "isOptional")
+            val newRequest =
+                createNewRequest(request = request, email = null, uid = null, roleId = null, mode = "isOptional")
             return chain.filter(exchange.mutate().request(newRequest).build())
         }
 
@@ -239,7 +240,7 @@ class AuthenticationFilterFactory(
 
 
     enum class AuthFilterMode {
-        FULLY, ONLY_TOKEN, OPTIONAL
+        FULLY, ONLYTOKEN, OPTIONAL
     }
 }
 

@@ -48,6 +48,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/io.grpc/grpc-netty
     implementation("io.grpc:grpc-netty:1.56.0")
+    implementation(kotlin("stdlib-jdk8"))
 
 }
 
@@ -66,4 +67,12 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }
