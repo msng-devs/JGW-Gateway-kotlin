@@ -52,7 +52,7 @@ class RouteLocatorImpl(
      */
     private fun setPredicateSpec(route: ApiRouteResponseDto, predicateSpec: PredicateSpec): Buildable<Route?> {
 
-        logger.info("SET {} | {} | {} : {}",route.serviceName,route.routeOptionName,route.methodName,route.path)
+        logger.info("SET {} | {} | {} : {}", route.serviceName, route.routeOptionName, route.methodName, route.path)
 
         //set route path. ex) /api/v1/member/{id} ...
         val booleanSpec = predicateSpec.path(route.path)
@@ -84,6 +84,7 @@ class RouteLocatorImpl(
 
             //AUTH
             2 -> {
+                logger.
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config ->
@@ -91,19 +92,18 @@ class RouteLocatorImpl(
                         })
 
                 }
-
             }
 
             //ONLY_TOKEN_AUTH
             3 -> {
-
+                logger.debug("ONLY_TOKEN_AUTH")
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config ->
                             config.mode = AuthenticationFilterFactory.AuthFilterMode.ONLY_TOKEN
                         })
-                }
 
+                }
             }
 
             //RBAC
@@ -135,10 +135,10 @@ class RouteLocatorImpl(
 
             }
         }
-        if(route.path == "/api/v1/refresh/**"){
+        if (route.path == "/api/v1/refresh/**") {
             booleanSpec.filters {
                 it.filters(
-                    gatewayRefreshFilterFactory.apply { config : GatewayRefreshFilterFactory.Config ->
+                    gatewayRefreshFilterFactory.apply { config: GatewayRefreshFilterFactory.Config ->
                         config.isEnable = true
                     })
             }
