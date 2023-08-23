@@ -84,7 +84,6 @@ class RouteLocatorImpl(
 
             //AUTH
             2 -> {
-                logger.
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config ->
