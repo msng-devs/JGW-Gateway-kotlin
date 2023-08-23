@@ -53,7 +53,7 @@ class RouteLocatorImpl(
     private fun setPredicateSpec(route: ApiRouteResponseDto, predicateSpec: PredicateSpec): Buildable<Route?> {
 
         logger.info("SET {} | {} | {} : {}", route.serviceName, route.routeOptionName, route.methodName, route.path)
-        logger.debug("{} {}",route.routeOptionId, route.routeOptionName)
+        logger.debug("{} {}", route.routeOptionId, route.routeOptionName)
         //set route path. ex) /api/v1/member/{id} ...
         val booleanSpec = predicateSpec.path(route.path)
 
@@ -77,6 +77,7 @@ class RouteLocatorImpl(
 
         //process route options.
         when (route.routeOptionId) {
+
             //NO_AUTH
             1 -> {
                 //nothing
@@ -89,7 +90,7 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config ->
-                            config.mode = "FULLY"
+                            config.mode = AuthenticationFilterFactory.AuthFilterMode.FULLY
                         })
 
                 }
@@ -98,12 +99,11 @@ class RouteLocatorImpl(
             //ONLY_TOKEN_AUTH
             3 -> {
                 logger.debug("apply ONLY_TOKEN_AUTH")
+                val config = AuthenticationFilterFactory.Config()
+                config.mode = AuthenticationFilterFactory.AuthFilterMode.TOKEN_ONLY
+                val authenticationFilter = authenticationFilterFactory.apply(config)
                 booleanSpec.filters {
-                    it.filters(
-                        authenticationFilterFactory.apply { config ->
-                            config.mode = "TOKEN_ONLY"
-                        })
-
+                    it.filters(authenticationFilter)
                 }
             }
 
@@ -113,7 +113,7 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config ->
-                            config.mode = "FULLY"
+                            config.mode = AuthenticationFilterFactory.AuthFilterMode.FULLY
                         })
 
                     it.filters(
@@ -132,7 +132,7 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
-                            config.mode = "OPTIONAL"
+                            config.mode = AuthenticationFilterFactory.AuthFilterMode.OPTIONAL
                         })
                 }
 

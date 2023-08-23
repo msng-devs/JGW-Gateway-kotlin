@@ -28,7 +28,7 @@ class AuthenticationFilterFactory(
     private val logger = LoggerFactory.getLogger(RequestLoggingFilterFactory::class.java)
 
     data class Config(
-        var mode: String? = null,
+        var mode: AuthFilterMode? = null,
     )
 
     override fun newConfig(): Config {
@@ -37,17 +37,20 @@ class AuthenticationFilterFactory(
 
     override fun apply(config: Config): GatewayFilter {
         return GatewayFilter { exchange, chain ->
+
             logger.debug("AuthenticationFilterFactory Start {}", config.mode)
+
             when (config.mode) {
-                "TOKEN_ONLY"-> {
+
+                AuthFilterMode.TOKEN_ONLY -> {
                     return@GatewayFilter authenticationOnlyToken(exchange = exchange, chain = chain)
                 }
 
-                "OPTIONAL" -> {
+                AuthFilterMode.OPTIONAL -> {
                     return@GatewayFilter authenticationTokenOptional(exchange = exchange, chain = chain)
                 }
 
-                "FULLY" -> {
+                AuthFilterMode.FULLY -> {
                     return@GatewayFilter authenticationFully(exchange = exchange, chain = chain)
                 }
 
