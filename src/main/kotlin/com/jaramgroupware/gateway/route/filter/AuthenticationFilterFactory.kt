@@ -97,9 +97,10 @@ class AuthenticationFilterFactory(
         chain: GatewayFilterChain,
         exchange: ServerWebExchange
     ): Mono<Void> {
+
         val request = exchange.request
         val token = checkContainsAndExtractToken(request)
-
+        logger.debug("authenticationOnlyToken -> token: $token")
         val tokenInfo = firebaseClient.verifyAndDecodeToken(token, true)
 
         val newRequest =
@@ -123,7 +124,7 @@ class AuthenticationFilterFactory(
     private fun authenticationFully(chain: GatewayFilterChain, exchange: ServerWebExchange): Mono<Void> {
         val request = exchange.request
         val token = checkContainsAndExtractToken(request)
-
+        logger.debug("authenticationFully -> token: $token")
         val tokenInfo = firebaseClient.verifyAndDecodeToken(token, true)
 
         val role = memberService.findMemberById(tokenInfo.uid!!).flatMap {
@@ -170,7 +171,7 @@ class AuthenticationFilterFactory(
 
         val request = exchange.request
         val token = extractToken(request)
-
+        logger.debug("authenticationTokenOptional -> token: $token")
         //토큰이 아에 없을 경우
         if (token.isEmpty()) {
             val newRequest =
