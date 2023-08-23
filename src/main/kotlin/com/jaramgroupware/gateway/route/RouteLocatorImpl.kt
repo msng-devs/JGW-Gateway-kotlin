@@ -89,7 +89,7 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config ->
-                            config.mode = AuthenticationFilterFactory.AuthFilterMode.FULLY
+                            config.mode = "FULLY"
                         })
 
                 }
@@ -100,8 +100,8 @@ class RouteLocatorImpl(
                 logger.debug("apply ONLY_TOKEN_AUTH")
                 booleanSpec.filters {
                     it.filters(
-                        authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
-                            config.mode = AuthenticationFilterFactory.AuthFilterMode.TOKEN_ONLY
+                        authenticationFilterFactory.apply { config ->
+                            config.mode = "TOKEN_ONLY"
                         })
 
                 }
@@ -113,7 +113,7 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config ->
-                            config.mode = AuthenticationFilterFactory.AuthFilterMode.FULLY
+                            config.mode = "FULLY"
                         })
 
                     it.filters(
@@ -132,7 +132,7 @@ class RouteLocatorImpl(
                 booleanSpec.filters {
                     it.filters(
                         authenticationFilterFactory.apply { config: AuthenticationFilterFactory.Config ->
-                            config.mode = AuthenticationFilterFactory.AuthFilterMode.OPTIONAL
+                            config.mode = "OPTIONAL"
                         })
                 }
 
