@@ -23,6 +23,9 @@ data class ApiRoute(
     @Column("PATH_VARIABLE")
     val pathVariable: String?,
 
+    @Column("PRIORITY")
+    val priority: Int,
+
     @Transient
     val role: Role?,
 

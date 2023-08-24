@@ -15,6 +15,7 @@ class ApiRouteMapper : BiFunction<Row, RowMetadata, ApiRoute> {
         return ApiRoute(
             id = row.get("API_ROUTE_PK", Int::class.java)!!,
             path = row.get("API_ROUTE_PATH", String::class.java)!!,
+            priority = row.get("PRIORITY", Int::class.java)!!,
             role = if (row.get("ROLE_PK") != null)
                 Role(
                     id = row.get("ROLE_PK", Int::class.java)!!,

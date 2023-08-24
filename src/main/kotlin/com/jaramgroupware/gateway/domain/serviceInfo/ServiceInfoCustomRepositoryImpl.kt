@@ -17,4 +17,12 @@ class ServiceInfoCustomRepositoryImpl(
             .map(serviceInfoMapper)
             .one()
     }
+
+    override fun findAllService(): Mono<List<ServiceInfo>> {
+        val query = "SELECT * FROM SERVICE"
+        return client.sql(query)
+            .map(serviceInfoMapper)
+            .all()
+            .collectList()
+    }
 }
