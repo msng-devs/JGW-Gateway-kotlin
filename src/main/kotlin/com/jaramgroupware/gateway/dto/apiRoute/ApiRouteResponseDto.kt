@@ -6,7 +6,6 @@ import com.jaramgroupware.gateway.domain.apiRoute.ApiRoute
 data class ApiRouteResponseDto(
     val id: Int,
     val path: String,
-    val pathVariable: String,
     val roleId: Int?,
     val serviceName: String,
     val serviceDomain: String,
@@ -17,7 +16,6 @@ data class ApiRouteResponseDto(
     constructor(apiRoute: ApiRoute):this(
         id = apiRoute.id,
         path = apiRoute.path,
-        pathVariable = apiRoute.pathVariable ?: "",
         roleId = apiRoute.role?.id,
         serviceName = apiRoute.service.name,
         serviceDomain = apiRoute.service.domain,
