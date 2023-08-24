@@ -20,8 +20,6 @@ data class ApiRoute(
     @Column("API_ROUTE_PATH")
     val path: String,
 
-    @Column("PATH_VARIABLE")
-    val pathVariable: String?,
 
     @Column("PRIORITY")
     val priority: Int,

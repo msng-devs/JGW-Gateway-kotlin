@@ -34,8 +34,7 @@ class ApiRouteMapper : BiFunction<Row, RowMetadata, ApiRoute> {
             routeOption = RouteOption(
                 id = row.get("ROUTE_OPTION_PK", Int::class.java)!!,
                 name = row.get("ROUTE_OPTION_NM", String::class.java)!!
-            ),
-            pathVariable = row.get("PATH_VARIABLE", String::class.java)
+            )
         )
     }
 }
