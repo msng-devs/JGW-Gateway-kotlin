@@ -99,11 +99,12 @@ class RouteLocatorImpl(
             //ONLY_TOKEN_AUTH
             3 -> {
                 logger.debug("apply ONLY_TOKEN_AUTH")
-                val config = AuthenticationFilterFactory.Config()
-                config.mode = AuthenticationFilterFactory.AuthFilterMode.TOKEN_ONLY
-                val authenticationFilter = authenticationFilterFactory.apply(config)
                 booleanSpec.filters {
-                    it.filters(authenticationFilter)
+                    it.filters(
+                        authenticationFilterFactory.apply { config ->
+                            config.mode = AuthenticationFilterFactory.AuthFilterMode.TOKEN_ONLY
+                        })
+
                 }
             }
 

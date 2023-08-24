@@ -26,4 +26,43 @@ class ApiRouteCustomRepositoryImpl(
             .map(apiRouteMapper)
             .all()
     }
+
+    override fun findServiceById(id: Int): Flux<ApiRoute> {
+        val query = """
+               SELECT * FROM API_ROUTE
+               LEFT JOIN METHOD
+               ON METHOD.METHOD_PK = API_ROUTE.METHOD_METHOD_PK
+               LEFT JOIN ROLE
+               ON ROLE.ROLE_PK = API_ROUTE.ROLE_ROLE_PK
+               LEFT JOIN SERVICE
+               ON SERVICE.SERVICE_PK = API_ROUTE.SERVICE_SERVICE_PK
+               LEFT JOIN ROUTE_OPTION
+               ON ROUTE_OPTION.ROUTE_OPTION_PK = API_ROUTE.ROUTE_OPTION_ROUTE_OPTION_PK
+               WHERE API_ROUTE.SERVICE_SERVICE_PK = ?
+               """.trimIndent()
+        return client.sql(query)
+            .bind(0, id)
+            .map(apiRouteMapper)
+            .all()
+    }
+
+    override fun findAllOrderServiceAndPriority(): Flux<ApiRoute> {
+        val query = """
+               SELECT * FROM API_ROUTE
+               LEFT JOIN METHOD
+               ON METHOD.METHOD_PK = API_ROUTE.METHOD_METHOD_PK
+               LEFT JOIN ROLE
+               ON ROLE.ROLE_PK = API_ROUTE.ROLE_ROLE_PK
+               LEFT JOIN SERVICE
+               ON SERVICE.SERVICE_PK = API_ROUTE.SERVICE_SERVICE_PK
+               LEFT JOIN ROUTE_OPTION
+               ON ROUTE_OPTION.ROUTE_OPTION_PK = API_ROUTE.ROUTE_OPTION_ROUTE_OPTION_PK
+               ORDER BY API_ROUTE.SERVICE_SERVICE_PK ASC, API_ROUTE.PRIORITY ASC
+               """.trimIndent()
+        return client.sql(query)
+            .map(apiRouteMapper)
+            .all()
+    }
+
+
 }
