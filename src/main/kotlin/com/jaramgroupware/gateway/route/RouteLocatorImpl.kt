@@ -21,7 +21,6 @@ class RouteLocatorImpl(
     @Autowired val routeLocatorBuilder: RouteLocatorBuilder,
     @Autowired val setPathGatewayFilterFactory: SetPathGatewayFilterFactory,
     @Autowired val cleanRequestFilterFactory: CleanRequestFilterFactory,
-    @Autowired val requestFilterFactory: RequestLoggingFilterFactory,
     @Autowired val authenticationFilterFactory: AuthenticationFilterFactory,
     @Autowired val rbacFilterFactory: RBACFilterFactory,
     @Autowired val gatewayRefreshFilterFactory: GatewayRefreshFilterFactory,
@@ -68,10 +67,10 @@ class RouteLocatorImpl(
                 config.isEnable = true
             })
 
-            //add loggin filter
-            it.filters(requestFilterFactory.apply { config ->
-                config.isEnable = true
-            })
+//            //add loggin filter
+//            it.filters(requestFilterFactory.apply { config ->
+//                config.isEnable = true
+//            })
 
         }
 
