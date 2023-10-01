@@ -24,7 +24,6 @@ class GatewayConfig {
         routeLocatorBuilder: RouteLocatorBuilder,
         setPathGatewayFilterFactory: SetPathGatewayFilterFactory,
         cleanRequestFilterFactory: CleanRequestFilterFactory,
-        requestFilterFactory: RequestLoggingFilterFactory,
         authenticationFilterFactory: AuthenticationFilterFactory,
         rbacFilterFactory: RBACFilterFactory,
         gatewayRefreshFilterFactory: GatewayRefreshFilterFactory
@@ -34,7 +33,6 @@ class GatewayConfig {
             routeLocatorBuilder = routeLocatorBuilder,
             setPathGatewayFilterFactory = setPathGatewayFilterFactory,
             cleanRequestFilterFactory = cleanRequestFilterFactory,
-            requestFilterFactory = requestFilterFactory,
             authenticationFilterFactory = authenticationFilterFactory,
             rbacFilterFactory = rbacFilterFactory,
             gatewayRefreshFilterFactory = gatewayRefreshFilterFactory
