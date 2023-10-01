@@ -18,7 +18,7 @@ import java.util.*
 class RBACFilterFactory :
     GatewayFilterFactory<RBACFilterFactory.Config> {
 
-    private val logger = LoggerFactory.getLogger(RequestLoggingFilterFactory::class.java)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     data class Config(
         var role: Int? = null

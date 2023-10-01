@@ -25,7 +25,7 @@ class AuthenticationFilterFactory(
 
     ) : GatewayFilterFactory<AuthenticationFilterFactory.Config> {
 
-    private val logger = LoggerFactory.getLogger(RequestLoggingFilterFactory::class.java)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     data class Config(
         var mode: AuthFilterMode? = null,
