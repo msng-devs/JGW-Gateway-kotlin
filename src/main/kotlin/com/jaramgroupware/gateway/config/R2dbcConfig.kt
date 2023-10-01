@@ -7,9 +7,12 @@ import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.r2dbc.core.DatabaseClient
 
+/**
+ * R2dbc 설정을 위한 클래스
+ */
 @Configuration
 @EnableR2dbcRepositories(basePackages = ["com.jaramgroupware.gateway.domain"])
-class R2dbcConfig(private val connectionFactory: ConnectionFactory){
+class R2dbcConfig(private val connectionFactory: ConnectionFactory) {
 
     @Bean
     fun databaseClient(): DatabaseClient {

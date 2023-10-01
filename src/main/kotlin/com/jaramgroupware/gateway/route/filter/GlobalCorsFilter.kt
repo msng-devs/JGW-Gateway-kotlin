@@ -26,11 +26,13 @@ class GlobalCorsFilter {
             response.headers.remove("Access-Control-Request-Method")
             response.headers.remove("access-control-allow-credentials")
             if (exchange.request.headers.origin == null) {
-                throw ApplicationException(
-                    errorCode = ApplicationErrorCode.ORIGIN_MISSING,
-                    message = "사용자의 헤더에서 origin을 찾을 수 없습니다.")
+//                throw ApplicationException(
+//                    errorCode = ApplicationErrorCode.ORIGIN_MISSING,
+//                    message = "사용자의 헤더에서 origin을 찾을 수 없습니다.")
+                response.headers.accessControlAllowOrigin = "localhost"
+            } else {
+                response.headers.accessControlAllowOrigin = exchange.request.headers.origin
             }
-            response.headers.accessControlAllowOrigin = exchange.request.headers.origin
             response.headers.accessControlAllowCredentials = true
             response.headers.accessControlAllowMethods = listOf(
                 HttpMethod.GET,

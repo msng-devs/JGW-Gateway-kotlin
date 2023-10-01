@@ -14,7 +14,7 @@ class TemplateLogger {
             val headers = request.headers
             val remoteAddress = request.remoteAddress?.address?.hostAddress?: "Unknown"
 
-            return "Method: $method, Path: $path, QueryParams: $queryParams, Headers: $headers, RemoteAddress: $remoteAddress"
+            return "[$method] Path=($path) RemoteAddress=($remoteAddress), QueryParams=($queryParams), Headers=($headers)"
 
         }
     }

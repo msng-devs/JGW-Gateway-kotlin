@@ -20,7 +20,7 @@ class RequestLoggingFilterFactory: GatewayFilterFactory<RequestLoggingFilterFact
         return GatewayFilter { exchange, chain ->
             val request = exchange.request
             val requestLog = TemplateLogger.createRequestLog(request)
-            logger.info("Received request -$requestLog")
+            logger.info(requestLog)
 
             chain.filter(exchange)
         }
